@@ -45,10 +45,12 @@ class KrisMoney(customtkinter.CTk):
         self.grid_columnconfigure(1, weight=1)
         self.grid_columnconfigure((2, 3), weight=0)
         self.grid_rowconfigure((0, 1, 2), weight=1)
+        self.my_font = customtkinter.CTkFont(family="Arial 14 bold")
+
         # Стили
         self.style = ttk.Style()
         self.style.theme_use("clam")
-        self.style.configure("TableStyle.Treeview", highlightthickness=0, bd=0, font=('Calibri', 11)) # Modify the font of the body
+        self.style.configure("TableStyle.Treeview", highlightthickness=0, bd=0,font=('Calibri', 11)) # Modify the font of the body
         self.style.configure("TableStyle.Treeview", background="#bebcb9", fieldbackground="#bebcb9", foreground="black")
         self.style.configure("TableStyle.Treeview.Heading", background="#bebcb9", fieldbackground="#bebcb9", foreground="black", relief="flat")
         self.style.configure("TableStyle.Treeview.Heading", font=('Calibri', 13,'bold')) # Modify the font of the headings
@@ -95,15 +97,16 @@ class KrisMoney(customtkinter.CTk):
         self.frame_table_income.pack(side="top")
             # Таблица 
         columns = ("1", "2", "3", "4")
-        self.income_Table = ttk.Treeview(self.frame_table_income, show="headings", columns=columns, style="TableStyle.Treeview")
+        self.income_Table = ttk.Treeview(self.frame_table_income, show="headings", columns=columns, style="TableStyle.Treeview", height=18)
         self.income_Table.heading("1", text="#")
         self.income_Table.heading("2", text="Дата")
         self.income_Table.heading("3", text="Источник")
         self.income_Table.heading("4", text="Сумма")
+        self.income_Table.column("2", width=84, anchor="center", minwidth=84)
         self.scrolltable = customtkinter.CTkScrollbar(self.frame_table_income, command=self.income_Table.yview)
         self.income_Table.configure(yscrollcommand=self.scrolltable.set)
         self.scrolltable.pack(side="right", fill="y")
-        self.income_Table.pack(fill="both", expand=1)
+        self.income_Table.pack(fill="both", expand=True)
 
         self.add_income = customtkinter.CTkButton(self.income_block, text="Добавить", command=self.show_input_window_income)
         self.add_income.pack(side="left")
@@ -252,6 +255,22 @@ class KrisMoney(customtkinter.CTk):
         data_income.reverse()
         for row in data_income:
             self.income_Table.insert("", "end", values=row)
+        list_ID = []
+        list_SOURCE = []
+        list_MONEY = []
+        c.execute("SELECT * FROM income_table")
+        for i in c.fetchall():
+            list_ID.append(i[0])
+            list_SOURCE.append(i[2])
+            list_MONEY.append(i[3])
+
+        width_ID_column = max([self.my_font.measure(item) for item in list_ID])
+        width_SOURCE_column = max([self.my_font.measure(item) for item in list_SOURCE])
+        width_MONEY_column = max([self.my_font.measure(item) for item in list_MONEY])
+
+        self.income_Table.column("1", width=width_ID_column+20)
+        # self.income_Table.column("3", width=width_SOURCE_column+20)
+        # self.income_Table.column("4", width=width_MONEY_column+50, anchor="center")
 
     # Кнопка вызова окна для добавления новой записи дохода
     def show_input_window_income(self):
@@ -286,13 +305,19 @@ class KrisMoney(customtkinter.CTk):
 
     def delete_record(self):
         selected_item = self.income_Table.focus()
+        # item_id = self.income_Table.item(selected_item)["values"][0]
+        item_id = self.income_Table.item(selected_item)["values"][0]
         self.income_Table.delete(selected_item)
+
+        c.execute("DELETE FROM income_table WHERE id = ?", (item_id,))
+        conn.commit()
+
 
     def reflesh_balance(self):
         c.execute("SELECT * FROM income_table")
         balance = 0
         for row in c.fetchall():
-            balance += row[2]
+            balance += row[3]
 
         print(balance)
         self.income_text.configure(text = "Баланс: "+str(balance))
