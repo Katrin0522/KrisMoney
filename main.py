@@ -59,7 +59,7 @@ class KrisMoney(customtkinter.CTk):
         # Боковое меню
         self.sidebar_frame = customtkinter.CTkFrame(self, width=140, corner_radius=0)
         self.sidebar_frame.grid(row=0, column=0, rowspan=4, sticky="nsew")
-        self.sidebar_frame.grid_rowconfigure(6, weight=1)
+        self.sidebar_frame.grid_rowconfigure(7, weight=1)
 
         self.sidebar_button_1 = customtkinter.CTkButton(self.sidebar_frame, command=self.button_main_block, text="Главное", width=80)
         self.sidebar_button_1.grid(row=1, column=0, padx=20, pady=10)
@@ -73,8 +73,11 @@ class KrisMoney(customtkinter.CTk):
         self.sidebar_button_4 = customtkinter.CTkButton(self.sidebar_frame, command=self.button_duty_block, text="Долги", width=80)
         self.sidebar_button_4.grid(row=4, column=0, padx=20, pady=10)
 
+        self.info_label = customtkinter.CTkLabel(self.sidebar_frame, text="Справка", width=80)
+        self.info_label.grid(row=5, column=0, padx=10)
+        
         self.sidebar_button_5 = customtkinter.CTkButton(self.sidebar_frame, command=self.button_category_block, text="Категории", width=80)
-        self.sidebar_button_5.grid(row=5, column=0, padx=20, pady=10)
+        self.sidebar_button_5.grid(row=6, column=0, padx=20, pady=10)
         
         # Главный блок
         self.main_block = customtkinter.CTkFrame(self, width=140, corner_radius=0)
@@ -82,8 +85,12 @@ class KrisMoney(customtkinter.CTk):
 
         self.title_text = customtkinter.CTkLabel(self.main_block, text="Главное")
         self.title_text.pack()
+
         self.income_text = customtkinter.CTkLabel(self.main_block, text="0")
         self.income_text.pack(side="left")
+
+        self.duty_people_text = customtkinter.CTkLabel(self.main_block, text="0")
+        self.duty_people_text.pack(side="right")
 
         # self.outcome_text = customtkinter.CTkLabel(self.main_block, text="Последние расходы")
         # self.outcome_text.pack(side="right")
@@ -173,8 +180,11 @@ class KrisMoney(customtkinter.CTk):
 
         # Категории блок
         self.category_block = customtkinter.CTkFrame(self, width=140, corner_radius=0)
-        self.title_text = customtkinter.CTkLabel(self.category_block, text="Категории")
+        self.title_text = customtkinter.CTkLabel(self.category_block, text="Справка о категориях")
         self.title_text.pack()
+        self.info_category = customtkinter.CTkLabel(self.category_block,justify="left", text="Дом(аренда, налоги, страховка, содержание дома)\n\nЕда(продукты, кафе и рестораны)\n\nДолги(кредитные карты, долги, кредиты)\n\nТранспорт(автомобиль, общественный транспорт, такси)\n\nСчета и услуги(налоги, электричество, вода, газ, телефон и т.д.)\n\nЛичные расходы(одежда, красота, развлечения, книги, медицина)\n\nОбразование(курсы, репетитор, оплата колледжа/вуза)\n\nОтдых/Развлечения(игры, кино)\n\nРазное")
+        self.info_category.pack(side="left")
+
 
         # Привязки для работы контроля размера таблиц
         self.income_Table.bind('<Button-1>', self.handle_click)
@@ -320,7 +330,7 @@ class KrisMoney(customtkinter.CTk):
     def save_input_outcome(self):
         global entered_text
         self.first_entry = self.date_enter_outcome.get()
-        self.two_entry = self.source_enter_outcome.get()
+        self.two_entry = self.combobox_category.get()
         self.three_entry = self.sum_enter_outcome.get()
 
         if not self.first_entry or not self.two_entry or not self.three_entry:
@@ -484,8 +494,12 @@ class KrisMoney(customtkinter.CTk):
 
         self.category_text = customtkinter.CTkLabel(self.input_window_outcome, text="Категория:", width=100)
         self.category_text.grid(row=1, column=0, padx=10, pady=10)
-        self.source_enter_outcome = customtkinter.CTkEntry(self.input_window_outcome)
-        self.source_enter_outcome.grid(row=1, column=1, padx=10, pady=10)
+
+        self.combobox_category = customtkinter.CTkOptionMenu(master=self.input_window_outcome,
+                                               values=["Дом", "Еда", "Долги", "Транспорт", "Счета и услуги", "Личные расходы", "Образование", "Отдых/Развлечения", "Разное"],
+                                               command=self.optionmenu_callback)
+        self.combobox_category.grid(row=1, column=1, padx=10, pady=10)
+        self.combobox_category.set("Дом")  # set initial value
 
         # Сюда проверку на цифры сунуть
         self.money_count_text = customtkinter.CTkLabel(self.input_window_outcome, text="Сумма:", width=100)
@@ -570,6 +584,7 @@ class KrisMoney(customtkinter.CTk):
     def reflesh_balance(self):
         c.execute("SELECT * FROM income_table")
         balance = 0
+        balance_duty = []
         for row in c.fetchall():
             balance += row[3]
 
@@ -577,8 +592,19 @@ class KrisMoney(customtkinter.CTk):
         for row in c.fetchall():
             balance = balance - row[3]
         print(balance)
-        self.income_text.configure(text = "Баланс: "+str(balance))
+        self.income_text.configure(text = "Баланс: "+str(round(balance, 2)))
 
+        c.execute("SELECT * FROM duty_table")
+        for row in c.fetchall():
+            balance_duty.append(row[4])
+
+        for i in balance_duty:
+            duty_result =+ i
+
+        self.duty_people_text.configure(text = "Долг: -"+str(round(duty_result, 2)))
+
+    def optionmenu_callback(self, choice):
+        print("optionmenu dropdown clicked:", choice)
 if __name__ == "__main__":
     app = KrisMoney()
     app.mainloop()

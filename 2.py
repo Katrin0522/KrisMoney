@@ -1,70 +1,54 @@
+import sqlite3
 import tkinter as tk
+from tkinter import ttk
 
-def show_input_window():
-    input_window = tk.Toplevel()
-    input_window.title("Input Data")
+# Connect to the SQLite database or create it if it does not exist
+conn = sqlite3.connect("expenses.db")
+cursor = conn.cursor()
 
-    first_name_label = tk.Label(input_window, text="First Name:")
-    first_name_label.grid(row=0, column=0, padx=10, pady=10)
-    first_name_entry = tk.Entry(input_window)
-    first_name_entry.grid(row=0, column=1, padx=10, pady=10)
+# Create the table to store expenses and income
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS expenses (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    amount REAL NOT NULL,
+    category TEXT NOT NULL,
+    date TEXT NOT NULL
+)
+""")
+conn.commit()
 
-    last_name_label = tk.Label(input_window, text="Last Name:")
-    last_name_label.grid(row=1, column=0, padx=10, pady=10)
-    last_name_entry = tk.Entry(input_window)
-    last_name_entry.grid(row=1, column=1, padx=10, pady=10)
-
-    age_label = tk.Label(input_window, text="Age:")
-    age_label.grid(row=2, column=0, padx=10, pady=10)
-    age_entry = tk.Entry(input_window)
-    age_entry.grid(row=2, column=1, padx=10, pady=10)
-
-    submit_button = tk.Button(input_window, text="Submit", command=input_window.destroy)
-    submit_button.grid(row=3, column=1, padx=10, pady=10)
-
+# Create the main window
 root = tk.Tk()
-root.title("Main Window")
+root.title("Expense Tracker")
 
-open_input_window_button = tk.Button(root, text="Open Input Window", command=show_input_window)
-open_input_window_button.pack(pady=20)
+# Create the label for the amount entry
+amount_label = ttk.Label(root, text="Amount:")
+amount_label.grid(row=0, column=0)
 
+# Create the entry for the amount
+amount_entry = ttk.Entry(root)
+amount_entry.grid(row=0, column=1)
+
+# Create the label for the category
+category_label = ttk.Label(root, text="Category:")
+category_label.grid(row=1, column=0)
+
+# Create the dropdown for the categories
+categories = ["Food", "Auto", "Candy"]
+category_var = tk.StringVar()
+category_dropdown = ttk.OptionMenu(root, category_var, *categories)
+category_dropdown.grid(row=1, column=1)
+
+# Create the add button
+def add_expense():
+    amount = amount_entry.get()
+    category = category_var.get()
+    cursor.execute("INSERT INTO expenses (amount, category, date) VALUES (?, ?, datetime('now'))", (amount, category))
+    conn.commit()
+    amount_entry.delete(0, tk.END)
+
+add_button = ttk.Button(root, text="Add", command=add_expense)
+add_button.grid(row=2, column=0, columnspan=2)
+
+# Run the main loop
 root.mainloop()
-
-
-# Подтврерждение что всё заполнено
-# import tkinter as tk
-# from tkinter import messagebox
-
-# def submit_data():
-#     name = entry1.get()
-#     age = entry2.get()
-#     city = entry3.get()
-#     if not name or not age or not city:
-#         messagebox.showerror("Error", "All fields are required")
-#         return
-#     messagebox.showinfo("Success", "Data submitted successfully")
-
-# root = tk.Tk()
-# root.geometry("300x200")
-# root.title("Data Entry")
-
-# label1 = tk.Label(root, text="Name")
-# label2 = tk.Label(root, text="Age")
-# label3 = tk.Label(root, text="City")
-
-# entry1 = tk.Entry(root)
-# entry2 = tk.Entry(root)
-# entry3 = tk.Entry(root)
-
-# label1.grid(row=0, column=0, pady=10)
-# label2.grid(row=1, column=0, pady=10)
-# label3.grid(row=2, column=0, pady=10)
-
-# entry1.grid(row=0, column=1, pady=10)
-# entry2.grid(row=1, column=1, pady=10)
-# entry3.grid(row=2, column=1, pady=10)
-
-# submit_button = tk.Button(root, text="Submit", command=submit_data)
-# submit_button.grid(row=3, column=0, columnspan=2, pady=10)
-
-# root.mainloop()
