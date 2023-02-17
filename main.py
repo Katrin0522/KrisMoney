@@ -583,25 +583,31 @@ class KrisMoney(customtkinter.CTk):
 
     def reflesh_balance(self):
         c.execute("SELECT * FROM income_table")
-        balance = 0
-        balance_duty = []
-        for row in c.fetchall():
-            balance += row[3]
+        if c.fetchall() != []:
+            c.execute("SELECT * FROM income_table")
+            balance = 0
+            balance_duty = []
+            for row in c.fetchall():
+                balance += row[3]
 
         c.execute("SELECT * FROM outcome_table")
-        for row in c.fetchall():
-            balance = balance - row[3]
-        print(balance)
-        self.income_text.configure(text = "Баланс: "+str(round(balance, 2)))
+        if c.fetchall() != []:
+            c.execute("SELECT * FROM outcome_table")
+            for row in c.fetchall():
+                balance = balance - row[3]
+            print(balance)
+            self.income_text.configure(text = "Баланс: "+str(round(balance, 2)))
 
         c.execute("SELECT * FROM duty_table")
-        for row in c.fetchall():
-            balance_duty.append(row[4])
+        if c.fetchall() != []:
+            c.execute("SELECT * FROM duty_table")
+            for row in c.fetchall():
+                balance_duty.append(row[4])
 
-        for i in balance_duty:
-            duty_result =+ i
+            for i in balance_duty:
+                duty_result =+ i
 
-        self.duty_people_text.configure(text = "Долг: -"+str(round(duty_result, 2)))
+            self.duty_people_text.configure(text = "Долг: -"+str(round(duty_result, 2)))
 
     def optionmenu_callback(self, choice):
         print("optionmenu dropdown clicked:", choice)
