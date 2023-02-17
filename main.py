@@ -82,18 +82,41 @@ class KrisMoney(customtkinter.CTk):
         # Главный блок
         self.main_block = customtkinter.CTkFrame(self, width=140, corner_radius=0)
         self.main_block.grid(row=0, column=1, padx=(20, 20), pady=(20, 20), sticky="nsew", rowspan=3)
+        self.main_block.grid_columnconfigure(0, weight=2)
+        self.main_block.grid_columnconfigure(1, weight=2)
+
 
         self.title_text = customtkinter.CTkLabel(self.main_block, text="Главное")
-        self.title_text.pack()
+        self.title_text.grid(row=0, column=0, padx=(20, 20), pady=(10, 0), columnspan=2)
 
-        self.income_text = customtkinter.CTkLabel(self.main_block, text="0")
-        self.income_text.pack(side="left")
+        self.income_text = customtkinter.CTkLabel(self.main_block, text="Баланс: 0")
+        self.income_text.grid(row=1, column=0, padx=(0, 20), pady=(5, 20))
 
-        self.duty_people_text = customtkinter.CTkLabel(self.main_block, text="0")
-        self.duty_people_text.pack(side="right")
+        self.duty_people_text = customtkinter.CTkLabel(self.main_block, text="Долгов нет")
+        self.duty_people_text.grid(row=1, column=1, padx=(20, 0), pady=(5, 20))
 
-        # self.outcome_text = customtkinter.CTkLabel(self.main_block, text="Последние расходы")
-        # self.outcome_text.pack(side="right")
+        self.last_outcome_text = customtkinter.CTkLabel(self.main_block, text="Последние расходы")
+        self.last_outcome_text.grid(row=2, column=0, padx=(70, 20), pady=(50, 0), sticky="w")
+
+        self.last_income_text = customtkinter.CTkLabel(self.main_block, text="Последние доходы")
+        self.last_income_text.grid(row=2, column=1, padx=(20, 70), pady=(50, 0), sticky="e")
+
+        columns = ("3", "4")
+        self.last_outcome = ttk.Treeview(self.main_block, show="headings", columns=columns, style="TableStyle.Treeview", height=5)
+        self.last_outcome.heading("3", text="Категория")
+        self.last_outcome.heading("4", text="Сумма")
+        self.last_outcome.column("3", width=120, stretch=False, minwidth=120)
+        self.last_outcome.column("4", width=100, anchor="center", minwidth=100, stretch=False)
+        self.last_outcome.grid(row=3, column=0, padx=(20, 20), pady=(0, 20), sticky="w")
+
+
+        self.last_income = ttk.Treeview(self.main_block, show="headings", columns=columns, style="TableStyle.Treeview", height=5)
+        self.last_income.heading("3", text="Источник")
+        self.last_income.heading("4", text="Сумма")
+        self.last_income.column("3", width=120, stretch=False, minwidth=120)
+        self.last_income.column("4", width=100, anchor="center", minwidth=100, stretch=False)
+        self.last_income.grid(row=3, column=1, padx=(20, 20), pady=(0, 20), sticky="e")
+
 
         # Доходный блок
         self.income_block = customtkinter.CTkFrame(self, width=140, corner_radius=0)
@@ -102,6 +125,7 @@ class KrisMoney(customtkinter.CTk):
 
         self.frame_table_income = customtkinter.CTkFrame(self.income_block)
         self.frame_table_income.pack(side="top")
+
             # Таблица 
         columns = ("1", "2", "3", "4")
         self.income_Table = ttk.Treeview(self.frame_table_income, show="headings", columns=columns, style="TableStyle.Treeview", height=18)
@@ -127,6 +151,7 @@ class KrisMoney(customtkinter.CTk):
 
         self.frame_table_outcome = customtkinter.CTkFrame(self.outcome_block)
         self.frame_table_outcome.pack(side="top")
+
             # Таблица 
         columns = ("1", "2", "3", "4")
         self.outcome_Table = ttk.Treeview(self.frame_table_outcome, show="headings", columns=columns, style="TableStyle.Treeview", height=18)
@@ -155,6 +180,7 @@ class KrisMoney(customtkinter.CTk):
 
         self.frame_table_duty = customtkinter.CTkFrame(self.duty_block)
         self.frame_table_duty.pack(side="top")
+
             # Таблица 
         columns = ("1", "2", "3", "4", "5")
         self.duty_Table = ttk.Treeview(self.frame_table_duty, show="headings", columns=columns, style="TableStyle.Treeview", height=18)
@@ -185,11 +211,11 @@ class KrisMoney(customtkinter.CTk):
         self.info_category = customtkinter.CTkLabel(self.category_block,justify="left", text="Дом(аренда, налоги, страховка, содержание дома)\n\nЕда(продукты, кафе и рестораны)\n\nДолги(кредитные карты, долги, кредиты)\n\nТранспорт(автомобиль, общественный транспорт, такси)\n\nСчета и услуги(налоги, электричество, вода, газ, телефон и т.д.)\n\nЛичные расходы(одежда, красота, развлечения, книги, медицина)\n\nОбразование(курсы, репетитор, оплата колледжа/вуза)\n\nОтдых/Развлечения(игры, кино)\n\nРазное")
         self.info_category.pack(side="left")
 
-
         # Привязки для работы контроля размера таблиц
         self.income_Table.bind('<Button-1>', self.handle_click)
         self.outcome_Table.bind('<Button-1>', self.handle_click)
         self.duty_Table.bind('<Button-1>', self.handle_click)
+        self.last_outcome.bind('<Button-1>', self.handle_click)
 
     # Функция проверки поля с суммой
     def only_numbers(self, char):
@@ -198,6 +224,7 @@ class KrisMoney(customtkinter.CTk):
         else:
             return False
 
+    # Функция блокирующая доступ к изменению размера таблиц
     def handle_click(self, event):
         if self.income_Table.identify_region(event.x, event.y) == "separator":
             return "break"
@@ -205,11 +232,10 @@ class KrisMoney(customtkinter.CTk):
             return "break"
         if self.duty_Table.identify_region(event.x, event.y) == "separator":
             return "break"
-    
-    # Кнопки бокового меню
-    def button_callback(self):
-        print("button pressed")
+        if self.last_outcome.identify_region(event.x, event.y) == "separator":
+            return "break"
 
+    # Кнопки для переходов
     def button_main_block(self):
         if self.income_block.winfo_ismapped():
             self.income_block.grid_forget()
@@ -223,11 +249,12 @@ class KrisMoney(customtkinter.CTk):
 
         if self.duty_block.winfo_ismapped():
             self.duty_block.grid_forget()
-            # self.reflesh_balance()
+            self.reflesh_balance()
             self.main_block.grid(row=0, column=1, padx=(20, 20), pady=(20, 20), sticky="nsew", rowspan=3)
 
         if self.category_block.winfo_ismapped():
             self.category_block.grid_forget()
+            self.reflesh_balance()
             self.main_block.grid(row=0, column=1, padx=(20, 20), pady=(20, 20), sticky="nsew", rowspan=3)
 
     def button_income_block(self):
@@ -290,6 +317,7 @@ class KrisMoney(customtkinter.CTk):
 
         if self.category_block.winfo_ismapped():
             self.category_block.grid_forget()
+            self.refresh_tree_duty()
             self.duty_block.grid(row=0, column=1, padx=(20, 20), pady=(20, 20), sticky="nsew", rowspan=3)
 
     def button_category_block(self):
@@ -309,6 +337,8 @@ class KrisMoney(customtkinter.CTk):
             self.duty_block.grid_forget()
             self.category_block.grid(row=0, column=1, padx=(20, 20), pady=(20, 20), sticky="nsew", rowspan=3)
 
+
+    # Сохранение данных с доп.окна дохода
     def save_input_income(self):
         global entered_text
         self.first_entry = self.date_enter_income.get()
@@ -326,7 +356,8 @@ class KrisMoney(customtkinter.CTk):
         conn.commit()
         self.refresh_tree_income()
         self.input_window.destroy()
-
+    
+    # Сохранениие данных с доп.окна расхода
     def save_input_outcome(self):
         global entered_text
         self.first_entry = self.date_enter_outcome.get()
@@ -344,7 +375,8 @@ class KrisMoney(customtkinter.CTk):
         conn.commit()
         self.refresh_tree_outcome()
         self.input_window_outcome.destroy()
-
+    
+    # Сохранениие данных с доп.окна долга
     def save_input_duty(self):
         global entered_text
         self.first_entry = self.date_enter_duty.get()
@@ -581,6 +613,7 @@ class KrisMoney(customtkinter.CTk):
             c.execute("DELETE FROM duty_table WHERE id = ?", (item_id,))
             conn.commit()
 
+    # Обновление баланса на главной странице
     def reflesh_balance(self):
         c.execute("SELECT * FROM income_table")
         if c.fetchall() != []:
@@ -596,7 +629,11 @@ class KrisMoney(customtkinter.CTk):
             for row in c.fetchall():
                 balance = balance - row[3]
             print(balance)
-            self.income_text.configure(text = "Баланс: "+str(round(balance, 2)))
+
+            if not balance:
+                self.income_text.configure(text = "Баланс: 0")
+            if balance:
+                self.income_text.configure(text = "Баланс: "+str(round(balance, 2)))
 
         c.execute("SELECT * FROM duty_table")
         if c.fetchall() != []:
@@ -608,9 +645,32 @@ class KrisMoney(customtkinter.CTk):
                 duty_result =+ i
 
             self.duty_people_text.configure(text = "Долг: -"+str(round(duty_result, 2)))
+        else:
+            self.duty_people_text.configure(text = "Долгов нет")
 
+
+
+        self.last_outcome.delete(*self.last_outcome.get_children())
+        c.execute("SELECT * FROM outcome_table")
+        data_outcome = c.fetchall()
+        print(data_outcome)
+        data_outcome.reverse()
+        for row in data_outcome:
+            self.last_outcome.insert("", "end", values=[row[2], row[3]])
+
+        self.last_income.delete(*self.last_income.get_children())
+        c.execute("SELECT * FROM income_table")
+        data_income = c.fetchall()
+        print(data_income)
+        data_income.reverse()
+        for row in data_income:
+            self.last_income.insert("", "end", values=[row[2], row[3]])
+
+    # Проверка выбора категории
     def optionmenu_callback(self, choice):
         print("optionmenu dropdown clicked:", choice)
+
 if __name__ == "__main__":
     app = KrisMoney()
+    app.after(0, app.reflesh_balance)
     app.mainloop()
