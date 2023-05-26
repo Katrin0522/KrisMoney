@@ -3,6 +3,7 @@ import tkinter.ttk as ttk
 from tkinter import messagebox
 import random
 import sqlite3
+import babel.numbers
 from tkcalendar import DateEntry
 conn = sqlite3.connect('income.db')
 c = conn.cursor()
@@ -615,30 +616,30 @@ class KrisMoney(customtkinter.CTk):
 
     # Обновление баланса на главной странице
     def reflesh_balance(self):
+        # Запросы для составления баланса
+        balance = 0
+        balance_duty = []
+        # Доход
         c.execute("SELECT * FROM income_table")
-        if c.fetchall() != []:
-            c.execute("SELECT * FROM income_table")
-            balance = 0
-            balance_duty = []
-            for row in c.fetchall():
-                balance += row[3]
-
+        income_balance = c.fetchall()
+        # Расход
         c.execute("SELECT * FROM outcome_table")
-        if c.fetchall() != []:
-            c.execute("SELECT * FROM outcome_table")
-            for row in c.fetchall():
-                balance = balance - row[3]
-            print(balance)
-
-            if not balance:
-                self.income_text.configure(text = "Баланс: 0")
-            if balance:
-                self.income_text.configure(text = "Баланс: "+str(round(balance, 2)))
-
+        outcome_balance = c.fetchall()
+        # Долг
         c.execute("SELECT * FROM duty_table")
-        if c.fetchall() != []:
-            c.execute("SELECT * FROM duty_table")
-            for row in c.fetchall():
+        duty_balance = c.fetchall()
+
+        # Доход
+        if income_balance != []:   
+            for row in income_balance:
+                balance += row[3]
+        # Расход
+        if outcome_balance != []:
+            for row in outcome_balance:
+                balance = balance - row[3]
+        # Долги
+        if duty_balance != []:
+            for row in duty_balance:
                 balance_duty.append(row[4])
 
             for i in balance_duty:
@@ -649,23 +650,26 @@ class KrisMoney(customtkinter.CTk):
             self.duty_people_text.configure(text = "Долгов нет")
 
 
-
+        # Таблица расходов
         self.last_outcome.delete(*self.last_outcome.get_children())
         c.execute("SELECT * FROM outcome_table")
         data_outcome = c.fetchall()
-        print(data_outcome)
         data_outcome.reverse()
         for row in data_outcome:
             self.last_outcome.insert("", "end", values=[row[2], row[3]])
 
+        # Таблица доходов
         self.last_income.delete(*self.last_income.get_children())
         c.execute("SELECT * FROM income_table")
         data_income = c.fetchall()
-        print(data_income)
         data_income.reverse()
         for row in data_income:
             self.last_income.insert("", "end", values=[row[2], row[3]])
 
+        if not balance:
+            self.income_text.configure(text = "Баланс: 0")
+        else:
+            self.income_text.configure(text = "Баланс: "+str(round(balance, 2)))
     # Проверка выбора категории
     def optionmenu_callback(self, choice):
         print("optionmenu dropdown clicked:", choice)
