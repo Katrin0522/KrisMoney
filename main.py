@@ -39,7 +39,7 @@ class KrisMoney(customtkinter.CTk):
         super().__init__()
 
         # Конфигурация
-        self.title("KrisMoney - Мониторинг хорошего настроения")
+        self.title("KrisMoney - Мониторинг бюджета")
         self.geometry(f"{800}x{500}")
         self.resizable(False, False)
         self.grid_columnconfigure(1, weight=1)
