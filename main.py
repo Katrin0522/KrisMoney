@@ -1,20 +1,29 @@
+# Импорты для GUI
 import customtkinter
 import tkinter.ttk as ttk
 from tkinter import messagebox
-import random
-import sqlite3
-import babel.numbers
 from tkcalendar import DateEntry
+
+# Импорт для упаковки и БД
+import sqlite3
+import random
+import babel.numbers
+
+# Создание/подключение к БД
 conn = sqlite3.connect('income.db')
+
+# Создание потока, с помощью которого будем делать запросы
 c = conn.cursor()
 
+# Создание таблиц
+# Доходы
 c.execute("""CREATE TABLE IF NOT EXISTS income_table (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 date text,
                 category text,
                 amount real
                 )""")
-
+# Расходы
 c.execute("""CREATE TABLE IF NOT EXISTS outcome_table (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 date text,
@@ -22,10 +31,12 @@ c.execute("""CREATE TABLE IF NOT EXISTS outcome_table (
                 amount real
                 )""")
 
+# Категории
 c.execute("""CREATE TABLE IF NOT EXISTS category_table (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name text)""")
 
+# Долги
 c.execute("""CREATE TABLE IF NOT EXISTS duty_table (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 date text,
@@ -34,8 +45,14 @@ c.execute("""CREATE TABLE IF NOT EXISTS duty_table (
                 amount real
                 )""")
 
+# Выставляем тёмную тему GUI
 customtkinter.set_appearance_mode('dark')
+
+
+# Главный класс всего ПО
 class KrisMoney(customtkinter.CTk):
+
+    # Инициализация всех графических элементов GUI
     def __init__(self):
         super().__init__()
 
@@ -43,81 +60,98 @@ class KrisMoney(customtkinter.CTk):
         self.title("KrisMoney - Мониторинг бюджета")
         self.geometry(f"{800}x{500}")
         self.resizable(False, False)
+
+        # Настройки виртуальной таблицы для элементов
         self.grid_columnconfigure(1, weight=1)
         self.grid_columnconfigure((2, 3), weight=0)
         self.grid_rowconfigure((0, 1, 2), weight=1)
         self.my_font = customtkinter.CTkFont(family="Arial 14 bold")
 
-        # Стили
+        # Стили для таблицы
         self.style = ttk.Style()
         self.style.theme_use("clam")
-        self.style.configure("TableStyle.Treeview", highlightthickness=0, bd=0,font=('Calibri', 11)) # Modify the font of the body
+        self.style.configure("TableStyle.Treeview", highlightthickness=0, bd=0,
+                             font=('Calibri', 11))  # Modify the font of the body
         self.style.configure("TableStyle.Treeview", background="#bebcb9", fieldbackground="#bebcb9", foreground="black")
-        self.style.configure("TableStyle.Treeview.Heading", background="#bebcb9", fieldbackground="#bebcb9", foreground="black", relief="flat")
-        self.style.configure("TableStyle.Treeview.Heading", font=('Calibri', 13,'bold')) # Modify the font of the headings
-        self.style.layout("TableStyle.Treeview", [('TableStyle.Treeview.treearea', {'sticky': 'nswe'})]) # Remove the borders
+        self.style.configure("TableStyle.Treeview.Heading", background="#bebcb9", fieldbackground="#bebcb9",
+                             foreground="black", relief="flat")
+        self.style.configure("TableStyle.Treeview.Heading",
+                             font=('Calibri', 13, 'bold'))  # Modify the font of the headings
+        self.style.layout("TableStyle.Treeview",
+                          [('TableStyle.Treeview.treearea', {'sticky': 'nswe'})])  # Remove the borders
 
         # Боковое меню
         self.sidebar_frame = customtkinter.CTkFrame(self, width=140, corner_radius=0)
         self.sidebar_frame.grid(row=0, column=0, rowspan=4, sticky="nsew")
         self.sidebar_frame.grid_rowconfigure(7, weight=1)
 
-        self.sidebar_button_1 = customtkinter.CTkButton(self.sidebar_frame, command=self.button_main_block, text="Главное", width=80)
+        self.sidebar_button_1 = customtkinter.CTkButton(self.sidebar_frame, command=self.button_main_block,
+                                                        text="Главное", width=80)
         self.sidebar_button_1.grid(row=1, column=0, padx=20, pady=10)
 
-        self.sidebar_button_2 = customtkinter.CTkButton(self.sidebar_frame, command=self.button_income_block, text="Доходы", width=80)
+        self.sidebar_button_2 = customtkinter.CTkButton(self.sidebar_frame, command=self.button_income_block,
+                                                        text="Доходы", width=80)
         self.sidebar_button_2.grid(row=2, column=0, padx=20, pady=10)
 
-        self.sidebar_button_3 = customtkinter.CTkButton(self.sidebar_frame, command=self.button_outcome_block, text="Расходы", width=80)
+        self.sidebar_button_3 = customtkinter.CTkButton(self.sidebar_frame, command=self.button_outcome_block,
+                                                        text="Расходы", width=80)
         self.sidebar_button_3.grid(row=3, column=0, padx=20, pady=10)
 
-        self.sidebar_button_4 = customtkinter.CTkButton(self.sidebar_frame, command=self.button_duty_block, text="Долги", width=80)
+        self.sidebar_button_4 = customtkinter.CTkButton(self.sidebar_frame, command=self.button_duty_block,
+                                                        text="Долги", width=80)
         self.sidebar_button_4.grid(row=4, column=0, padx=20, pady=10)
 
         self.info_label = customtkinter.CTkLabel(self.sidebar_frame, text="Справка", width=80)
         self.info_label.grid(row=5, column=0, padx=10)
-        
-        self.sidebar_button_5 = customtkinter.CTkButton(self.sidebar_frame, command=self.button_category_block, text="Категории", width=80)
+
+        self.sidebar_button_5 = customtkinter.CTkButton(self.sidebar_frame, command=self.button_category_block,
+                                                        text="Категории", width=80)
         self.sidebar_button_5.grid(row=6, column=0, padx=20, pady=10)
-        
+
         # Главный блок
         self.main_block = customtkinter.CTkFrame(self, width=140, corner_radius=0)
         self.main_block.grid(row=0, column=1, padx=(20, 20), pady=(20, 20), sticky="nsew", rowspan=3)
         self.main_block.grid_columnconfigure(0, weight=2)
         self.main_block.grid_columnconfigure(1, weight=2)
 
-
+        # Титульный текст
         self.title_text = customtkinter.CTkLabel(self.main_block, text="Главное")
         self.title_text.grid(row=0, column=0, padx=(20, 20), pady=(10, 0), columnspan=2)
 
+        # Текст с балансом доходов
         self.income_text = customtkinter.CTkLabel(self.main_block, text="Баланс: 0")
         self.income_text.grid(row=1, column=0, padx=(0, 20), pady=(5, 20))
 
+        # Текст с балансом Долгов
         self.duty_people_text = customtkinter.CTkLabel(self.main_block, text="Долгов нет")
         self.duty_people_text.grid(row=1, column=1, padx=(20, 0), pady=(5, 20))
 
+        # (ТЕКСТ)Таблица с последними расходами
         self.last_outcome_text = customtkinter.CTkLabel(self.main_block, text="Последние расходы")
         self.last_outcome_text.grid(row=2, column=0, padx=(70, 20), pady=(50, 0), sticky="w")
 
+        # (ТЕКСТ)Таблица с последними доходами
         self.last_income_text = customtkinter.CTkLabel(self.main_block, text="Последние доходы")
         self.last_income_text.grid(row=2, column=1, padx=(20, 70), pady=(50, 0), sticky="e")
 
+        # Таблица с последними расходами
         columns = ("3", "4")
-        self.last_outcome = ttk.Treeview(self.main_block, show="headings", columns=columns, style="TableStyle.Treeview", height=5)
+        self.last_outcome = ttk.Treeview(self.main_block, show="headings", columns=columns, style="TableStyle.Treeview",
+                                         height=5)
         self.last_outcome.heading("3", text="Категория")
         self.last_outcome.heading("4", text="Сумма")
         self.last_outcome.column("3", width=120, stretch=False, minwidth=120)
         self.last_outcome.column("4", width=100, anchor="center", minwidth=100, stretch=False)
         self.last_outcome.grid(row=3, column=0, padx=(20, 20), pady=(0, 20), sticky="w")
 
-
-        self.last_income = ttk.Treeview(self.main_block, show="headings", columns=columns, style="TableStyle.Treeview", height=5)
+        # Таблица с последними доходами
+        self.last_income = ttk.Treeview(self.main_block, show="headings", columns=columns, style="TableStyle.Treeview",
+                                        height=5)
         self.last_income.heading("3", text="Источник")
         self.last_income.heading("4", text="Сумма")
         self.last_income.column("3", width=120, stretch=False, minwidth=120)
         self.last_income.column("4", width=100, anchor="center", minwidth=100, stretch=False)
         self.last_income.grid(row=3, column=1, padx=(20, 20), pady=(0, 20), sticky="e")
-
 
         # Доходный блок
         self.income_block = customtkinter.CTkFrame(self, width=140, corner_radius=0)
@@ -127,9 +161,10 @@ class KrisMoney(customtkinter.CTk):
         self.frame_table_income = customtkinter.CTkFrame(self.income_block)
         self.frame_table_income.pack(side="top")
 
-            # Таблица 
+        # Таблица
         columns = ("1", "2", "3", "4")
-        self.income_Table = ttk.Treeview(self.frame_table_income, show="headings", columns=columns, style="TableStyle.Treeview", height=18)
+        self.income_Table = ttk.Treeview(self.frame_table_income, show="headings", columns=columns,
+                                         style="TableStyle.Treeview", height=18)
         self.income_Table.heading("1", text="#")
         self.income_Table.heading("2", text="Дата")
         self.income_Table.heading("3", text="Источник")
@@ -139,7 +174,8 @@ class KrisMoney(customtkinter.CTk):
         self.income_Table.configure(yscrollcommand=self.scrolltable.set)
         self.scrolltable.pack(side="right", fill="y")
         self.income_Table.pack(fill="both", expand=True)
-        self.add_income = customtkinter.CTkButton(self.income_block, text="Добавить", command=self.show_input_window_income)
+        self.add_income = customtkinter.CTkButton(self.income_block, text="Добавить",
+                                                  command=self.show_input_window_income)
         self.add_income.pack(side="left")
 
         self.delete_income = customtkinter.CTkButton(self.income_block, text="Удалить", command=self.delete_record)
@@ -153,9 +189,10 @@ class KrisMoney(customtkinter.CTk):
         self.frame_table_outcome = customtkinter.CTkFrame(self.outcome_block)
         self.frame_table_outcome.pack(side="top")
 
-            # Таблица 
+        # Таблица
         columns = ("1", "2", "3", "4")
-        self.outcome_Table = ttk.Treeview(self.frame_table_outcome, show="headings", columns=columns, style="TableStyle.Treeview", height=18)
+        self.outcome_Table = ttk.Treeview(self.frame_table_outcome, show="headings", columns=columns,
+                                          style="TableStyle.Treeview", height=18)
         self.outcome_Table.heading("1", text="#")
         self.outcome_Table.heading("2", text="Дата")
         self.outcome_Table.heading("3", text="Категория")
@@ -163,12 +200,14 @@ class KrisMoney(customtkinter.CTk):
         self.outcome_Table.column("2", width=84, anchor="center", minwidth=84, stretch=False)
         self.outcome_Table.column("3", minwidth=84, stretch=False)
         self.outcome_Table.column("4", anchor="center", minwidth=84, stretch=False)
-        self.scrolltable_outcome = customtkinter.CTkScrollbar(self.frame_table_outcome, command=self.outcome_Table.yview)
+        self.scrolltable_outcome = customtkinter.CTkScrollbar(self.frame_table_outcome,
+                                                              command=self.outcome_Table.yview)
         self.outcome_Table.configure(yscrollcommand=self.scrolltable_outcome.set)
         self.scrolltable_outcome.pack(side="right", fill="y")
         self.outcome_Table.pack(fill="both", expand=True)
 
-        self.add_outcome = customtkinter.CTkButton(self.outcome_block, text="Добавить", command=self.show_input_window_outcome)
+        self.add_outcome = customtkinter.CTkButton(self.outcome_block, text="Добавить",
+                                                   command=self.show_input_window_outcome)
         self.add_outcome.pack(side="left")
 
         self.delete_outcome = customtkinter.CTkButton(self.outcome_block, text="Удалить", command=self.delete_record)
@@ -182,9 +221,10 @@ class KrisMoney(customtkinter.CTk):
         self.frame_table_duty = customtkinter.CTkFrame(self.duty_block)
         self.frame_table_duty.pack(side="top")
 
-            # Таблица 
+        # Таблица
         columns = ("1", "2", "3", "4", "5")
-        self.duty_Table = ttk.Treeview(self.frame_table_duty, show="headings", columns=columns, style="TableStyle.Treeview", height=18)
+        self.duty_Table = ttk.Treeview(self.frame_table_duty, show="headings", columns=columns,
+                                       style="TableStyle.Treeview", height=18)
         self.duty_Table.heading("1", text="#")
         self.duty_Table.heading("2", text="Заём")
         self.duty_Table.heading("3", text="Кому")
@@ -209,7 +249,8 @@ class KrisMoney(customtkinter.CTk):
         self.category_block = customtkinter.CTkFrame(self, width=140, corner_radius=0)
         self.title_text = customtkinter.CTkLabel(self.category_block, text="Справка о категориях")
         self.title_text.pack()
-        self.info_category = customtkinter.CTkLabel(self.category_block,justify="left", text="Дом(аренда, налоги, страховка, содержание дома)\n\nЕда(продукты, кафе и рестораны)\n\nДолги(кредитные карты, долги, кредиты)\n\nТранспорт(автомобиль, общественный транспорт, такси)\n\nСчета и услуги(налоги, электричество, вода, газ, телефон и т.д.)\n\nЛичные расходы(одежда, красота, развлечения, книги, медицина)\n\nОбразование(курсы, репетитор, оплата колледжа/вуза)\n\nОтдых/Развлечения(игры, кино)\n\nРазное")
+        self.info_category = customtkinter.CTkLabel(self.category_block, justify="left",
+                                                    text="Дом(аренда, налоги, страховка, содержание дома)\n\nЕда(продукты, кафе и рестораны)\n\nДолги(кредитные карты, долги, кредиты)\n\nТранспорт(автомобиль, общественный транспорт, такси)\n\nСчета и услуги(налоги, электричество, вода, газ, телефон и т.д.)\n\nЛичные расходы(одежда, красота, развлечения, книги, медицина)\n\nОбразование(курсы, репетитор, оплата колледжа/вуза)\n\nОтдых/Развлечения(игры, кино)\n\nРазное")
         self.info_category.pack(side="left")
 
         # Привязки для работы контроля размера таблиц
@@ -338,7 +379,6 @@ class KrisMoney(customtkinter.CTk):
             self.duty_block.grid_forget()
             self.category_block.grid(row=0, column=1, padx=(20, 20), pady=(20, 20), sticky="nsew", rowspan=3)
 
-
     # Сохранение данных с доп.окна дохода
     def save_input_income(self):
         global entered_text
@@ -353,11 +393,12 @@ class KrisMoney(customtkinter.CTk):
 
         self.enter_incomebase = [self.first_entry, self.two_entry, self.three_entry]
 
-        c.execute("INSERT INTO income_table (date, category, amount) VALUES (?, ?, ?)", (self.enter_incomebase[0], self.enter_incomebase[1], self.enter_incomebase[2]))
+        c.execute("INSERT INTO income_table (date, category, amount) VALUES (?, ?, ?)",
+                  (self.enter_incomebase[0], self.enter_incomebase[1], self.enter_incomebase[2]))
         conn.commit()
         self.refresh_tree_income()
         self.input_window.destroy()
-    
+
     # Сохранениие данных с доп.окна расхода
     def save_input_outcome(self):
         global entered_text
@@ -372,11 +413,12 @@ class KrisMoney(customtkinter.CTk):
 
         self.enter_outcomebase = [self.first_entry, self.two_entry, self.three_entry]
 
-        c.execute("INSERT INTO outcome_table (date, category, amount) VALUES (?, ?, ?)", (self.enter_outcomebase[0], self.enter_outcomebase[1], self.enter_outcomebase[2]))
+        c.execute("INSERT INTO outcome_table (date, category, amount) VALUES (?, ?, ?)",
+                  (self.enter_outcomebase[0], self.enter_outcomebase[1], self.enter_outcomebase[2]))
         conn.commit()
         self.refresh_tree_outcome()
         self.input_window_outcome.destroy()
-    
+
     # Сохранениие данных с доп.окна долга
     def save_input_duty(self):
         global entered_text
@@ -392,7 +434,8 @@ class KrisMoney(customtkinter.CTk):
 
         self.enter_dutybase = [self.first_entry, self.two_entry, self.three_entry, self.tw_three_entry]
 
-        c.execute("INSERT INTO duty_table (date, people, description, amount) VALUES (?, ?, ?, ?)", (self.enter_dutybase[0], self.enter_dutybase[1], self.enter_dutybase[3],self.enter_dutybase[2]))
+        c.execute("INSERT INTO duty_table (date, people, description, amount) VALUES (?, ?, ?, ?)",
+                  (self.enter_dutybase[0], self.enter_dutybase[1], self.enter_dutybase[3], self.enter_dutybase[2]))
         conn.commit()
         self.refresh_tree_duty()
         self.input_window_duty.destroy()
@@ -421,7 +464,7 @@ class KrisMoney(customtkinter.CTk):
             # width_SOURCE_column = max([self.my_font.measure(item) for item in list_SOURCE])
             # width_MONEY_column = max([self.my_font.measure(item) for item in list_MONEY])
 
-            self.income_Table.column("1", width=width_ID_column+20)
+            self.income_Table.column("1", width=width_ID_column + 20)
         # self.income_Table.column("3", width=width_SOURCE_column+20)
         # self.income_Table.column("4", width=width_MONEY_column+50, anchor="center")
 
@@ -449,7 +492,7 @@ class KrisMoney(customtkinter.CTk):
             width_SOURCE_column = max([self.my_font.measure(item) for item in list_SOURCE])
             width_MONEY_column = max([self.my_font.measure(item) for item in list_MONEY])
 
-            self.outcome_Table.column("1", width=width_ID_column+20)
+            self.outcome_Table.column("1", width=width_ID_column + 20)
         # self.income_Table.column("3", width=width_SOURCE_column+20)
         # self.income_Table.column("4", width=width_MONEY_column+50, anchor="center")
 
@@ -477,7 +520,7 @@ class KrisMoney(customtkinter.CTk):
             width_SOURCE_column = max([self.my_font.measure(item) for item in list_SOURCE])
             width_MONEY_column = max([self.my_font.measure(item) for item in list_MONEY])
 
-            self.duty_Table.column("1", width=width_ID_column+20)
+            self.duty_Table.column("1", width=width_ID_column + 20)
         # self.income_Table.column("3", width=width_SOURCE_column+20)
         # self.income_Table.column("4", width=width_MONEY_column+50, anchor="center")
 
@@ -491,7 +534,8 @@ class KrisMoney(customtkinter.CTk):
         # Сюда выбор даты вставлять
         self.data_text = customtkinter.CTkLabel(self.input_window, text="Дата:", width=100)
         self.data_text.grid(row=0, column=0, padx=10, pady=10)
-        self.date_enter_income = DateEntry(self.input_window, width=20, background='blue', foreground="white", borderwidth=2, year=2023, locale="ru_RU")
+        self.date_enter_income = DateEntry(self.input_window, width=20, background='blue', foreground="white",
+                                           borderwidth=2, year=2023, locale="ru_RU")
         self.date_enter_income.grid(row=0, column=1, padx=10, pady=10)
 
         self.category_text = customtkinter.CTkLabel(self.input_window, text="Источник:", width=100)
@@ -506,10 +550,12 @@ class KrisMoney(customtkinter.CTk):
         self.sum_enter_income.configure(validate="key", validatecommand=(self.register(self.only_numbers), "%S"))
         self.sum_enter_income.grid(row=2, column=1, padx=10, pady=10)
 
-        self.submit_button = customtkinter.CTkButton(self.input_window, text="Подтвердить", command=self.save_input_income, width=50)
+        self.submit_button = customtkinter.CTkButton(self.input_window, text="Подтвердить",
+                                                     command=self.save_input_income, width=50)
         self.submit_button.grid(row=3, column=0, padx=10, pady=10)
 
-        self.dismit_button = customtkinter.CTkButton(self.input_window, text="Отмена", command=self.input_window.destroy, width=50)
+        self.dismit_button = customtkinter.CTkButton(self.input_window, text="Отмена",
+                                                     command=self.input_window.destroy, width=50)
         self.dismit_button.grid(row=3, column=1, padx=10, pady=10)
 
     # Кнопка вызова окна для добавления новой записи расхода
@@ -522,15 +568,18 @@ class KrisMoney(customtkinter.CTk):
         # Сюда выбор даты вставлять
         self.data_text = customtkinter.CTkLabel(self.input_window_outcome, text="Дата:", width=100)
         self.data_text.grid(row=0, column=0, padx=10, pady=10)
-        self.date_enter_outcome = DateEntry(self.input_window_outcome, width=20, background='blue', foreground="white", borderwidth=2, year=2023, locale="ru_RU")
+        self.date_enter_outcome = DateEntry(self.input_window_outcome, width=20, background='blue', foreground="white",
+                                            borderwidth=2, year=2023, locale="ru_RU")
         self.date_enter_outcome.grid(row=0, column=1, padx=10, pady=10)
 
         self.category_text = customtkinter.CTkLabel(self.input_window_outcome, text="Категория:", width=100)
         self.category_text.grid(row=1, column=0, padx=10, pady=10)
 
         self.combobox_category = customtkinter.CTkOptionMenu(master=self.input_window_outcome,
-                                               values=["Дом", "Еда", "Долги", "Транспорт", "Счета и услуги", "Личные расходы", "Образование", "Отдых/Развлечения", "Разное"],
-                                               command=self.optionmenu_callback)
+                                                             values=["Дом", "Еда", "Долги", "Транспорт",
+                                                                     "Счета и услуги", "Личные расходы", "Образование",
+                                                                     "Отдых/Развлечения", "Разное"],
+                                                             command=self.optionmenu_callback)
         self.combobox_category.grid(row=1, column=1, padx=10, pady=10)
         self.combobox_category.set("Дом")  # set initial value
 
@@ -541,10 +590,12 @@ class KrisMoney(customtkinter.CTk):
         self.sum_enter_outcome.configure(validate="key", validatecommand=(self.register(self.only_numbers), "%S"))
         self.sum_enter_outcome.grid(row=2, column=1, padx=10, pady=10)
 
-        self.submit_button = customtkinter.CTkButton(self.input_window_outcome, text="Подтвердить", command=self.save_input_outcome, width=50)
+        self.submit_button = customtkinter.CTkButton(self.input_window_outcome, text="Подтвердить",
+                                                     command=self.save_input_outcome, width=50)
         self.submit_button.grid(row=3, column=0, padx=10, pady=10)
 
-        self.dismit_button = customtkinter.CTkButton(self.input_window_outcome, text="Отмена", command=self.input_window_outcome.destroy, width=50)
+        self.dismit_button = customtkinter.CTkButton(self.input_window_outcome, text="Отмена",
+                                                     command=self.input_window_outcome.destroy, width=50)
         self.dismit_button.grid(row=3, column=1, padx=10, pady=10)
 
     # Кнопка вызова окна для добавления новой записи долга
@@ -557,7 +608,8 @@ class KrisMoney(customtkinter.CTk):
         # Сюда выбор даты вставлять
         self.data_text = customtkinter.CTkLabel(self.input_window_duty, text="Дата займа:", width=100)
         self.data_text.grid(row=0, column=0, padx=10, pady=10)
-        self.date_enter_duty = DateEntry(self.input_window_duty, width=20, background='blue', foreground="white", borderwidth=2, year=2023, locale="ru_RU")
+        self.date_enter_duty = DateEntry(self.input_window_duty, width=20, background='blue', foreground="white",
+                                         borderwidth=2, year=2023, locale="ru_RU")
         self.date_enter_duty.grid(row=0, column=1, padx=10, pady=10)
 
         self.category_text = customtkinter.CTkLabel(self.input_window_duty, text="Кому должен:", width=100)
@@ -567,7 +619,8 @@ class KrisMoney(customtkinter.CTk):
 
         self.data_text = customtkinter.CTkLabel(self.input_window_duty, text="Дата возврата:", width=100)
         self.data_text.grid(row=2, column=0, padx=10, pady=10)
-        self.date_term_duty = DateEntry(self.input_window_duty, width=20, background='blue', foreground="white", borderwidth=2, year=2023, locale="ru_RU")
+        self.date_term_duty = DateEntry(self.input_window_duty, width=20, background='blue', foreground="white",
+                                        borderwidth=2, year=2023, locale="ru_RU")
         self.date_term_duty.grid(row=2, column=1, padx=10, pady=10)
 
         # Сюда проверку на цифры сунуть
@@ -577,10 +630,12 @@ class KrisMoney(customtkinter.CTk):
         self.sum_enter_duty.configure(validate="key", validatecommand=(self.register(self.only_numbers), "%S"))
         self.sum_enter_duty.grid(row=3, column=1, padx=10, pady=10)
 
-        self.submit_button = customtkinter.CTkButton(self.input_window_duty, text="Подтвердить", command=self.save_input_duty, width=50)
+        self.submit_button = customtkinter.CTkButton(self.input_window_duty, text="Подтвердить",
+                                                     command=self.save_input_duty, width=50)
         self.submit_button.grid(row=4, column=0, padx=10, pady=10)
 
-        self.dismit_button = customtkinter.CTkButton(self.input_window_duty, text="Отмена", command=self.input_window_duty.destroy, width=50)
+        self.dismit_button = customtkinter.CTkButton(self.input_window_duty, text="Отмена",
+                                                     command=self.input_window_duty.destroy, width=50)
         self.dismit_button.grid(row=4, column=1, padx=10, pady=10)
 
     # Кнопка удаления записи в одной из трёх таблиц
@@ -630,7 +685,7 @@ class KrisMoney(customtkinter.CTk):
         duty_balance = c.fetchall()
 
         # Доход
-        if income_balance != []:   
+        if income_balance != []:
             for row in income_balance:
                 balance += row[3]
         # Расход
@@ -643,12 +698,11 @@ class KrisMoney(customtkinter.CTk):
                 balance_duty.append(row[4])
 
             for i in balance_duty:
-                duty_result =+ i
+                duty_result = + i
 
-            self.duty_people_text.configure(text = "Долг: -"+str(round(duty_result, 2)))
+            self.duty_people_text.configure(text="Долг: -" + str(round(duty_result, 2)))
         else:
-            self.duty_people_text.configure(text = "Долгов нет")
-
+            self.duty_people_text.configure(text="Долгов нет")
 
         # Таблица расходов
         self.last_outcome.delete(*self.last_outcome.get_children())
@@ -667,12 +721,14 @@ class KrisMoney(customtkinter.CTk):
             self.last_income.insert("", "end", values=[row[2], row[3]])
 
         if not balance:
-            self.income_text.configure(text = "Баланс: 0")
+            self.income_text.configure(text="Баланс: 0")
         else:
-            self.income_text.configure(text = "Баланс: "+str(round(balance, 2)))
+            self.income_text.configure(text="Баланс: " + str(round(balance, 2)))
+
     # Проверка выбора категории
     def optionmenu_callback(self, choice):
         print("optionmenu dropdown clicked:", choice)
+
 
 if __name__ == "__main__":
     app = KrisMoney()
