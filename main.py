@@ -1,9 +1,8 @@
 # Импорты для GUI
-import customtkinter
-import tkinter.ttk as ttk
-from tkinter import messagebox
-from tkcalendar import DateEntry
-
+import customtkinter # Импорт дополнения для Tkinter
+import tkinter.ttk as ttk # Импорт Tkinter для GUI
+from tkinter import messagebox # Импорт класса для создания окон
+from tkcalendar import DateEntry # Создание окна выбора даты
 # Импорт для упаковки и БД
 import sqlite3
 import random
@@ -114,27 +113,27 @@ class KrisMoney(customtkinter.CTk):
         self.main_block.grid_columnconfigure(0, weight=2)
         self.main_block.grid_columnconfigure(1, weight=2)
 
-        # Титульный текст
+            # Титульный текст
         self.title_text = customtkinter.CTkLabel(self.main_block, text="Главное")
         self.title_text.grid(row=0, column=0, padx=(20, 20), pady=(10, 0), columnspan=2)
 
-        # Текст с балансом доходов
+            # Текст с балансом доходов
         self.income_text = customtkinter.CTkLabel(self.main_block, text="Баланс: 0")
         self.income_text.grid(row=1, column=0, padx=(0, 20), pady=(5, 20))
 
-        # Текст с балансом Долгов
+            # Текст с балансом Долгов
         self.duty_people_text = customtkinter.CTkLabel(self.main_block, text="Долгов нет")
         self.duty_people_text.grid(row=1, column=1, padx=(20, 0), pady=(5, 20))
 
-        # (ТЕКСТ)Таблица с последними расходами
+            # (ТЕКСТ)Таблица с последними расходами
         self.last_outcome_text = customtkinter.CTkLabel(self.main_block, text="Последние расходы")
         self.last_outcome_text.grid(row=2, column=0, padx=(70, 20), pady=(50, 0), sticky="w")
 
-        # (ТЕКСТ)Таблица с последними доходами
+            # (ТЕКСТ)Таблица с последними доходами
         self.last_income_text = customtkinter.CTkLabel(self.main_block, text="Последние доходы")
         self.last_income_text.grid(row=2, column=1, padx=(20, 70), pady=(50, 0), sticky="e")
 
-        # Таблица с последними расходами
+            # Таблица с последними расходами
         columns = ("3", "4")
         self.last_outcome = ttk.Treeview(self.main_block, show="headings", columns=columns, style="TableStyle.Treeview",
                                          height=5)
@@ -144,7 +143,7 @@ class KrisMoney(customtkinter.CTk):
         self.last_outcome.column("4", width=100, anchor="center", minwidth=100, stretch=False)
         self.last_outcome.grid(row=3, column=0, padx=(20, 20), pady=(0, 20), sticky="w")
 
-        # Таблица с последними доходами
+            # Таблица с последними доходами
         self.last_income = ttk.Treeview(self.main_block, show="headings", columns=columns, style="TableStyle.Treeview",
                                         height=5)
         self.last_income.heading("3", text="Источник")
@@ -161,7 +160,7 @@ class KrisMoney(customtkinter.CTk):
         self.frame_table_income = customtkinter.CTkFrame(self.income_block)
         self.frame_table_income.pack(side="top")
 
-        # Таблица
+            # Таблица и кнопки
         columns = ("1", "2", "3", "4")
         self.income_Table = ttk.Treeview(self.frame_table_income, show="headings", columns=columns,
                                          style="TableStyle.Treeview", height=18)
@@ -189,7 +188,7 @@ class KrisMoney(customtkinter.CTk):
         self.frame_table_outcome = customtkinter.CTkFrame(self.outcome_block)
         self.frame_table_outcome.pack(side="top")
 
-        # Таблица
+            # Таблица и кнопки
         columns = ("1", "2", "3", "4")
         self.outcome_Table = ttk.Treeview(self.frame_table_outcome, show="headings", columns=columns,
                                           style="TableStyle.Treeview", height=18)
@@ -221,7 +220,7 @@ class KrisMoney(customtkinter.CTk):
         self.frame_table_duty = customtkinter.CTkFrame(self.duty_block)
         self.frame_table_duty.pack(side="top")
 
-        # Таблица
+            # Таблица
         columns = ("1", "2", "3", "4", "5")
         self.duty_Table = ttk.Treeview(self.frame_table_duty, show="headings", columns=columns,
                                        style="TableStyle.Treeview", height=18)
