@@ -31,9 +31,3 @@ Menu for adding a flow rate
 ![flow rate](https://github.com/Katrin0522/KrisMoney/assets/95361188/9d9bc321-fff9-4514-837e-7f4b88bd8e4e)
 
 
-
-
-
-**If you take code/example from here, email me with a link to your project, I'm interested)))**
-
-
